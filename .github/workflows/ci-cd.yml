@@ -27,4 +27,4 @@ jobs:
         remote-password: ${{ secrets.PASSWORD }}
         sync: full
         local-path: ./
-        remote-path: /var/html/live
+        remote-path: /var/www/live
