@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <style>
+        .p {
+            width: 10px;
+            height: 10px;
+            background-color: red;
+        }
+    </style>
+</head>
+
+<body>
+    <script type="importmap">
+        {
+          "imports": {
+            "vue": "https://unpkg.com/vue@3/dist/vue.esm-browser.js"
+          }
+        }
+      </script>
+
+    <div id="app">
+        {{threshold}}
+        <button @click="onClick1">-1</button>
+        <button @click="onClick2">+1</button>
+    </div>
+
+    <canvas id="canvas" width="800" height="600">A drawing of something.</canvas>
+
+    <script type="module">
+        var cvs = document.getElementById("canvas");
+        var ctx = cvs.getContext("2d");
+
+        import { createApp } from 'vue'
+
+        createApp({
+            data() {
+                return {
+                    points0: [],
+                    points: [],
+                    threshold: 1,
+                }
+            },
+            created() {
+                for (let i = 0; i < 800; i += 10) {
+                    let p = {
+                        x: i,
+                        y: Math.floor(Math.random() * 600)
+                    };
+                    this.points0.push(p);
+                    this.points.push(p);
+                }
+                console.log(this.points)
+                // 绘制
+                this.draw();
+
+                this.redraw();
+            },
+            methods: {
+                draw() {
+                    console.log(this.points.length);
+                    ctx.moveTo(0, 0);
+                    ctx.beginPath();
+                    for (let p of this.points) {
+                        ctx.lineTo(p.x, p.y)
+                    }
+                    ctx.stroke()
+                },
+                douglas(points, threshold) {
+                    let index = 0, dmax = 0;
+                    for (let i = 1; i < points.length - 1; i++) {
+                        let point = points[i];
+                        let d = this.getD(point, points[0], points[points.length - 1]);
+                        if (d > dmax) {
+                            dmax = d;
+                            index = i;
+                        }
+                    }
+                    if (dmax < threshold) {
+                        return [points[0], points[points.length - 1]];
+                    } else {
+                        let left = this.douglas(points.slice(0, index + 1), threshold);
+                        let right = this.douglas(points.slice(index, points.length), threshold);
+                        return left.slice(0, -1).concat(right);
+                    }
+                },
+                getD(point, point1, point2) {
+                    // 先两点式求得直线方程 (x-x1.)/(x2-x1) = (y-y1)(y2-y1)
+                    // 然后展开 (y2-y1)x + (x1-x2)y + (x2y1 - x1y2)  = 0
+                    let m = (point2.y - point1.y) * point.x + (point1.x - point2.x) * point.y + (point2.x * point1.y - point1.x * point2.y);
+                    let n = Math.pow(point2.y - point1.y, 2) + Math.pow(point1.x - point2.x, 2);
+                    // 根据点到直线距离公式 d=|Ax0+By0+C|/√(A²+B²)
+                    return Math.abs(m) / Math.sqrt(n);
+                },
+                redraw() {
+                    console.log('redraw')
+                    this.points = this.douglas(this.points0, this.threshold);
+                    ctx.clearRect(0, 0, cvs.width, cvs.height);
+                    this.draw();
+                },
+                onClick1() {
+                    this.threshold -= 5;
+                    this.redraw();
+                },
+                onClick2() {
+                    this.threshold += 5;
+                    this.redraw();
+                }
+            }
+        }).mount('#app')
+    </script>
+</body>
+
+</html>
