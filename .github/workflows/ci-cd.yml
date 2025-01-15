@@ -22,7 +22,7 @@ jobs:
       with:
         remote-protocol: sftp
         remote-host: pi.caojiantao.site
-        remote-port: 30022
+        remote-port: 2048
         remote-user: root
         remote-password: ${{ secrets.PASSWORD }}
         sync: full
